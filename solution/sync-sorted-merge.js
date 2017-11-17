@@ -2,17 +2,6 @@
 
 const Heap = require('heap')
 
-function getFirstEntries(logSources) {
-  let entries = []
-  for (var i = 0; i < logSources.length; i++) {
-    let entry = logSources[i].pop()
-    if (entry) {
-      entries.push(entry)
-    }
-  }
-  return entries
-}
-
 module.exports = (logSources, printer) => {
   const heap = new Heap((a, b) => {
     if (a.date < b.date) {
@@ -22,16 +11,20 @@ module.exports = (logSources, printer) => {
     }
   })
 
-  for (let i = 0; i < logSources.length; i++) {
-    let entry = logSources[i].pop()
+  logSources.forEach((source, index) => {
+    let entry = source.pop()
     if (entry) {
-      entry.sourceIndex = i
+      // associate entry with source so only one entry
+      // from each source is in the heap and we constrain space.
+      entry.sourceIndex = index
       heap.push(entry)
     }
-  }
+  })
 
-  while (heap.size()) {
+  while (!heap.empty()) {
     let entry = heap.pop()
+    printer.print(entry)
+
     if (!logSources[entry.sourceIndex].drained) {
       let newEntry = logSources[entry.sourceIndex].pop()
       if (newEntry) {
@@ -39,7 +32,6 @@ module.exports = (logSources, printer) => {
         heap.push(newEntry)
       }
     }
-    printer.print(entry)
   }
   printer.done()
 }
