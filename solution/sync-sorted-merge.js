@@ -3,6 +3,7 @@
 const Heap = require('heap')
 
 module.exports = (logSources, printer) => {
+  // init heap with comparator for log entry dates
   const heap = new Heap((a, b) => {
     if (a.date < b.date) {
       return -1
