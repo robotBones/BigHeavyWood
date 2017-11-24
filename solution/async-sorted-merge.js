@@ -25,8 +25,8 @@ module.exports = (logSources, printer) => {
       })
     }
 
-    P.all(newEntries).then(() => {
-      P.each(newEntries, (entry, index) => {
+    P.all(newEntries).then((entries) => {
+      entries.forEach((entry, index) => {
         if (entry) {
           // associate entry with source so only one entry
           // from each source is in the heap and we constrain space.
@@ -34,7 +34,7 @@ module.exports = (logSources, printer) => {
           heap.push(entry)
         }
       })
-      .then(() => event.emit('fetched'))
+      event.emit('fetched')
     })
   }
 
