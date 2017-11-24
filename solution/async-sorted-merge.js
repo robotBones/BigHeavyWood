@@ -15,7 +15,8 @@ module.exports = (logSources, printer) => {
     }
   })
 
-  function fetch(fromSource) {
+  // recursively fetch until logs are drained
+  const fetch = async (fromSource) => {
     let newEntries = []
     if (fromSource) {
       newEntries.push(logSources[fromSource].popAsync())
@@ -25,20 +26,16 @@ module.exports = (logSources, printer) => {
       })
     }
 
-    P.all(newEntries).then((entries) => {
-      entries.forEach((entry, index) => {
-        if (entry) {
-          // associate entry with source so only one entry
-          // from each source is in the heap and we constrain space.
-          entry.sourceIndex = index
-          heap.push(entry)
-        }
-      })
-      event.emit('fetched')
+    const entries = await P.all(newEntries)
+    entries.forEach((entry, index) => {
+      if (entry) {
+        // associate entry with source so only one entry
+        // from each source is in the heap and we constrain space.
+        entry.sourceIndex = index
+        heap.push(entry)
+      }
     })
-  }
 
-  event.on('fetched', () => {
     if (!heap.empty()) {
       let entry = heap.pop()
       printer.print(entry)
@@ -46,7 +43,7 @@ module.exports = (logSources, printer) => {
     } else {
       printer.done()
     }
-  })
+  }
 
   fetch()
 }
